@@ -1,0 +1,47 @@
+
+<!-- POSTS -->
+
+<div id="posts">
+  {% for post in posts%}
+    <div class="post" id="post{{post.pk}}">
+      <br>
+      <div class="post-title" id="post-title-{{post.pk}}"><a href="{% url 'post' post.pk %}"><h3>{{post.title|safe}}</h3></a></div>
+      <a href="{% url 'profile' post.user %}"><b id="post-user-{{post.pk}}">{{post.user}}</b></a>
+      <small id="date-{{post.pk}}" class="utc">{{post.time|date:'F d, Y, H:i:s'}}</small>
+    </div>
+  {% empty %}
+    <i>Looks like there aren't any posts here</i>
+  {% endfor %}
+</div>
+
+
+<!-- PAGINATION -->
+
+
+{% if pagecount > 1 %}
+<nav aria-label="Page navigation example">
+  <ul class="pagination justify-content-center">
+    {% if page == 1 %}
+    <li class="page-item disabled">
+    {% else %}
+    <li class="page-item">
+    {% endif %}
+      <a class="page-link" href="{{url}}/{{page|add:"-1"}}" tabindex="-1" aria-disabled="true">Previous</a>
+    </li>
+
+    {% with ''|center:pagecount as range %}
+    {% for _ in range %}
+    <li class="page-item{% if forloop.counter == page %} active{% endif %}"><a class="page-link" href="{{url}}/{{ forloop.counter }}">{{ forloop.counter }}</a></li>
+    {% endfor %}
+    {% endwith %}
+
+    {% if page == pagecount %}
+    <li class="page-item disabled">
+    {% else %}
+    <li class="page-item">
+    {% endif %}
+      <a class="page-link" href="{{url}}/{{page|add:"1"}}">Next</a>
+    </li>
+  </ul>
+</nav>
+{% endif %}

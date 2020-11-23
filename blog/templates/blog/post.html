@@ -1,0 +1,32 @@
+{% extends "blog/layout.html" %}
+
+{% block body %}
+<br>
+<br>
+<div id="posts">
+  <div class="post" id="post{{post.pk}}">
+    <a href="{% url 'profile' post.user %}"><b id="post-user-{{post.pk}}">{{post.user}}</b></a>
+    <small id="date-{{post.pk}}" class="utc">{{post.time|date:'F d, Y, H:i:s'}}</small>
+    <div class="post-title" id="post-title-{{post.pk}}" style="font-size: 22px">{{post.title|safe}}</div>
+    <div class="post-content" id="post-content-{{post.pk}}">{{post.content|safe|linebreaksbr}}</div>
+    {% if post.edited %}
+    <small id="edited{{post.pk}}"><i>(edited)</i></small>
+    {% endif %}
+    <br>
+
+    {% if post.user == user  %}
+    <span class="edit"><a href="#" onclick="toggleEditBox(this); return false;">Edit</a></span>
+    {% endif %}
+    <br>
+    {% if post.user == user or user.username == 'admin' %}
+    <form action="{% url 'delete' %}" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="id" value="{{post.pk}}">
+      <input type="submit" style="color: red;" value="Delete">
+    </form>
+    {% endif %}
+
+  </div>
+</div>
+
+{% endblock %}

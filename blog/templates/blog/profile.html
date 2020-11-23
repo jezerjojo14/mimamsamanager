@@ -1,0 +1,15 @@
+{% extends "blog/layout.html" %}
+
+{% block body %}
+<div class="head-content" id="{{profile_user.username}}">
+  <br><br><br>
+  <h3>{{profile_user.username}}</h3>
+  <br>
+  {% if user.username == 'admin' and user != profile_user %}
+  <a class="btn btn-outline-primary" href="#" onclick="toggle_inactive(this); return false;">{% if profile_user in user.following.all %}Unb{% else %}B{% endif %}lock</a>
+  {% endif %}
+  <br><br>
+  <h4>Posts:</h4>
+</div>
+{% include 'blog/posts.html' with url='/user/'|add:profile_user.username %}
+{% endblock %}

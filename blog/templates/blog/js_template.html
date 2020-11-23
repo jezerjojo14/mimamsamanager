@@ -1,0 +1,160 @@
+<script type="text/javascript">
+  function toggleEditBox(ele) {
+    if(ele.innerHTML=="Edit")
+    {
+      var post = ele.parentElement.parentElement;
+      var id = (post.id).substring(4);
+      var contentEle = document.getElementById(("post-content-").concat(id));
+      var titleEle = document.getElementById(('post-title-').concat(id));
+      var date = document.getElementById(("date-").concat(id));
+      var oldContent = contentEle.innerHTML;
+      var oldTitle = titleEle.innerHTML;
+      var postUsername=document.getElementById(("post-user-").concat(id)).innerHTML;
+      if(document.getElementById(("editForm").concat(id)) == null)
+      {
+        //Create Form
+
+          //Init form
+        var f = document.createElement("form");
+        f.setAttribute('method', "post");
+        f.setAttribute('onsubmit', "edit(this); return false;");
+        f.innerHTML='{% csrf_token %}';
+        f.id=("editForm").concat(id);
+        f.classList.add('editForm');
+          //Init form elements
+        var newTitle = document.createElement("input");
+        newTitle.type="text";
+        newTitle.value = oldTitle;
+        newTitle.name = "title";
+        newTitle.value=oldTitle.replace(/<br\s?\/?>/g,"\n").replace("<b>", "*").replace("</b>", "*").replace("<i>", "~").replace("</i>", "~").replace("<u>", "_").replace("</u>", "_").replace("<p style='text-align: center'>", "`").replace('<p style="text-align: center">', "`").replace("</p>", "`");
+        var newContent = document.createElement("textarea");
+        newContent.innerHTML=oldContent.replace(/<br\s?\/?>/g,"\n").replace("<b>", "*").replace("</b>", "*").replace("<i>", "~").replace("</i>", "~").replace("<u>", "_").replace("</u>", "_").replace("<p style='text-align: center'>", "`").replace('<p style="text-align: center">', "`").replace("</p>", "`");
+        newContent.name="content";
+        newContent.classList.add('editFormText');
+        newContent.style.marginTop="10px";
+        var br = document.createElement("br");
+        var submit = document.createElement("input");
+        submit.type="submit";
+        submit.name="submit";
+        submit.value="Post Changes";
+        submit.classList.add('editFormSubmit');
+        submit.classList.add('btn');
+        submit.classList.add('btn-outline-dark');
+        submit.style.margin="10px";
+        submit.style.marginLeft="0";
+        var cancel = document.createElement("button");
+        cancel.innerHTML="Cancel";
+        cancel.setAttribute('onclick', "toggleEditBox(this)");
+        cancel.id=("cancel").concat(id);
+        cancel.classList.add('editFormCancel');
+        cancel.classList.add('btn');
+        cancel.classList.add('btn-outline-dark');
+        cancel.style.margin="10px";
+        cancel.style.marginLeft="0";
+          //Add form elements to form
+        f.appendChild(newTitle);
+        f.appendChild(br);
+        f.appendChild(newContent);
+        f.appendChild(br);
+        f.appendChild(submit);
+        f.appendChild(cancel);
+
+
+        // post.insertBefore(cancel, ele.parentElement.nextElementSibling);
+        // post.insertBefore(f, cancel);
+        post.insertBefore(f, ele.parentElement.nextElementSibling);
+        contentEle.style.display="none";
+      }
+      else {
+        document.getElementById(("cancel").concat(id)).click();
+      }
+    }
+    else {
+      var post=ele.parentElement.parentElement;
+      var id = (post.id).substring(4);
+      var contentEle = document.getElementById(("post-content-").concat(id));
+      var form = document.getElementById(("editForm").concat(id))
+      contentEle.style.display="block";
+      post.removeChild(form);
+      // post.removeChild(ele);
+    }
+  }
+
+  async function edit(form) {
+    var newContent= (form.content.value).replace(/</g, "&lt;").replace(/\r\n|\r|\n/g,"<br>");
+    var newTitle = (form.title.value).replace(/</g, "&lt;").replace(/\r\n|\r|\n/g,"<br>");
+    console.log(newContent);
+    var id=form.id.substring(8);
+    toggleEditBox(document.getElementById(("cancel").concat(id)));
+    var contentEle = document.getElementById(("post-content-").concat(id));
+    var titleEle = document.getElementById(('post-title-').concat(id));
+    const result=await fetch('{% url 'edit_post' %}', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: ('{"id": ').concat(id, ', "title": "', newTitle, '", "content": "', newContent, '"}'),
+    })
+    const response=await result;
+    if (response.status==200)
+    {
+      console.log("All good");
+      const data=await response.json();
+      contentEle.innerHTML = data.content;
+      titleEle.innerHTML = data.title;
+      if (document.getElementById(('edited').concat(id)) == null)
+      {
+        var small = document.createElement("small");
+        small.innerHTML="<i>(edited) </i>";
+        small.id=('edited').concat(id);
+        contentEle.parentElement.insertBefore(small, contentEle.nextElementSibling);
+      }
+    }
+    else if (response.status==403) {
+      console.log("Woop doop");
+      var small = document.createElement("small");
+      small.innerHTML="<i>Forbidden </i>";
+      contentEle.parentElement.insertBefore(small, contentEle.nextElementSibling);
+    }
+  }
+
+  async function toggle_inactive(ele) {
+    let inactive=0;
+    if (ele.innerHTML=="Block")
+    {
+      inactive=1;
+    }
+    console.log(('{"profile":').concat('"', ele.parentElement.id, '", "inactive": ', inactive, "}"));
+    const result=await fetch('{% url 'toggle_inactive' %}', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: ('{"user": "{{user}}", "username":').concat('"', ele.parentElement.id, '", "inactive": ', inactive, "}"),
+    })
+    const response=await result;
+    const data=await response.json();
+    console.log(data);
+    if (data.inactive == 1)
+    {
+      ele.innerHTML="Unblock";
+    }
+    else
+    {
+      ele.innerHTML="Block";
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", ()=>{
+    var times=document.getElementsByClassName('utc');
+    for(var i = 0; i < times.length;)
+    {
+      var d = new Date((times[i].innerHTML).concat(" UTC"));
+      console.log((times[i].innerHTML).concat(" UTC"));
+      console.log(d);
+      times[i].innerHTML=(d.toLocaleString());
+      times[i].classList.remove('utc');
+    }
+
+  });
+</script>

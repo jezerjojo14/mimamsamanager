@@ -1,0 +1,17 @@
+{% extends "blog/layout.html" %}
+
+{% block body %}
+  {% if user.is_authenticated %}
+    <div id="new-post">
+      <h3>New Post: </h3>
+      <form action="{%url 'new_post'%}" method="post" autocomplete="off">
+        {% csrf_token %}
+        {{form}}
+        <input class="btn btn-primary" type="submit" value="Submit">
+      </form>
+    </div>
+  {% else %}
+    <br><br><br>
+  {% endif %}
+  {% include 'blog/posts.html' with url='posts'%}
+{% endblock %}
